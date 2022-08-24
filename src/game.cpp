@@ -1,5 +1,7 @@
+#include <bits/stdc++.h>
 #include "game.h"
 #include <iostream>
+#include <string>
 #include "SDL.h"
 
 Game::Game(std::size_t grid_width, std::size_t grid_height)
@@ -85,3 +87,62 @@ void Game::Update() {
 
 int Game::GetScore() const { return score; }
 int Game::GetSize() const { return snake.size; }
+std::string Game::GetUserName() {
+    std::cout << "Please enter your name \n";
+    std::string name;
+    std::getline(std::cin, name);
+    return name;
+}
+
+void Game::SaveScore() const {
+    // get name and score
+    auto name = GetUserName();
+    auto userScore = GetScore();
+
+    // write new score file
+    std::ofstream scoreFile;
+    scoreFile.open("newSnakeScores.txt", std::ios_base::app);
+    bool addUserToFile = true;
+
+    // read old score file to get rank of player
+    std::ifstream oldScoreFile;
+    oldScoreFile.open("snakeScores.txt");
+    if (!oldScoreFile) {
+        std::cout << "Congrats to your first game!";
+    } else {
+        // Check for the place in score list
+        std::string line;
+        std::vector<int> allScores;
+        while ( std::getline(oldScoreFile, line) ){
+            auto oldScore = line.substr(line.find(" "));
+            // add old score to score list if it is a new player or the old score of a known player is recorded
+            if ( (line.find(name) == std::string::npos) || (std::stoi(oldScore) > userScore) ) {
+                scoreFile << line << std::endl;
+                allScores.emplace_back(std::stoi(oldScore));
+            }
+            // do not write new score to score list if player already had higher scores
+            if ((line.find(name) != std::string::npos) && (std::stoi(oldScore) > userScore))
+                addUserToFile = false;
+        }
+        auto totalPlayers = allScores.size() + 1; // including current player
+        sort(allScores.begin(), allScores.end());
+        if (allScores.back() < score){
+            std::cout << "You are currently No. 1 of " << totalPlayers << std::endl;
+        }
+        else {
+            auto it = std::upper_bound(allScores.begin(), allScores.end(), score);
+            auto rank = std::distance( it, allScores.end()) + 1;
+            std::cout << "You are currently No. " << rank << " out of " << totalPlayers
+                      << std::endl;
+            std::cout << "Highest score is " << allScores.back() << std::endl;
+        }
+    }
+    oldScoreFile.close();
+
+    // write new score to file
+    if (addUserToFile)
+        scoreFile << name << " " << userScore << std::endl;
+    scoreFile.close();
+    remove("snakeScores.txt");
+    rename("newSnakeScores.txt", "snakeScores.txt");
+}

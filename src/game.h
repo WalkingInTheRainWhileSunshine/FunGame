@@ -14,6 +14,8 @@ class Game {
            std::size_t target_frame_duration);
   int GetScore() const;
   int GetSize() const;
+  static std::string GetUserName();
+  void SaveScore() const;
 
  private:
   Snake snake;

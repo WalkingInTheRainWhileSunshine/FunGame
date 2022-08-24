@@ -2,9 +2,11 @@ Feature 1
 	- scores
 	- let user enter their names
 	- save a txt file of scores to achieve a top score
+	--> in class game
 	
 Feature 2
 	- add obstacles to the game
+	
 	
 Feature 3 (needs to be done after Feature 2 as the obstacles must be available)
 	- player can choose between play against computer and play alone
