@@ -18,18 +18,26 @@ class Game {
   void SaveScore() const;
 
  private:
+  bool running {true};
+  std::vector<std::vector<Snake::GridState>> grid {};
+
   Snake snake;
   SDL_Point food;
+  std::vector<SDL_Point> obstacle;
 
   std::random_device dev;
   std::mt19937 engine;
   std::uniform_int_distribution<int> random_w;
   std::uniform_int_distribution<int> random_h;
 
-  int score{0};
+  int score {0};
+  int addObstacle {0};
 
+  void InitializeGrid(std::size_t grid_width, std::size_t grid_height);
   void PlaceFood();
+  void PlaceObstacle();
   void Update();
+  bool CheckCell(int x, int y);
 };
 
 #endif

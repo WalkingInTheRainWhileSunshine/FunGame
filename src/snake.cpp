@@ -2,7 +2,10 @@
 #include <cmath>
 #include <iostream>
 
-void Snake::Update() {
+void Snake::Update(std::vector<std::vector<GridState>> grid) {
+  // update snakeGrid
+  snakeGrid = grid;
+
   SDL_Point prev_cell{
       static_cast<int>(head_x),
       static_cast<int>(
@@ -41,20 +44,25 @@ void Snake::UpdateHead() {
   // Wrap the Snake around to the beginning if going off of the screen.
   head_x = fmod(head_x + grid_width, grid_width);
   head_y = fmod(head_y + grid_height, grid_height);
+
+  // update snake grid
+  snakeGrid[static_cast<int>(head_x)][static_cast<int>(head_y)] = GridState::kSnake;
 }
 
 void Snake::UpdateBody(SDL_Point &current_head_cell, SDL_Point &prev_head_cell) {
   // Add previous head location to vector
   body.push_back(prev_head_cell);
 
+  snakeGrid[static_cast<int>(prev_head_cell.x)][static_cast<int>(prev_head_cell.y)] = GridState::kSnake;
+
   if (!growing) {
     // Remove the tail from the vector.
     body.erase(body.begin());
+    snakeGrid[static_cast<int>(body.begin()->x)][static_cast<int>(body.begin()->y)] = GridState::kEmpty;
   } else {
     growing = false;
     size++;
   }
-
   // Check if the snake has died.
   for (auto const &item : body) {
     if (current_head_cell.x == item.x && current_head_cell.y == item.y) {
@@ -64,16 +72,3 @@ void Snake::UpdateBody(SDL_Point &current_head_cell, SDL_Point &prev_head_cell) 
 }
 
 void Snake::GrowBody() { growing = true; }
-
-// Inefficient method to check if cell is occupied by snake.
-bool Snake::SnakeCell(int x, int y) {
-  if (x == static_cast<int>(head_x) && y == static_cast<int>(head_y)) {
-    return true;
-  }
-  for (auto const &item : body) {
-    if (x == item.x && y == item.y) {
-      return true;
-    }
-  }
-  return false;
-}

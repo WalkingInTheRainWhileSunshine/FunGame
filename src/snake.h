@@ -3,9 +3,11 @@
 
 #include <vector>
 #include "SDL.h"
+//#include "game.h"
 
 class Snake {
  public:
+  enum class GridState {kEmpty, kObstacle, kSnake, kFood};
   enum class Direction { kUp, kDown, kLeft, kRight };
 
   Snake(int grid_width, int grid_height)
@@ -14,10 +16,9 @@ class Snake {
         head_x(grid_width / 2),
         head_y(grid_height / 2) {}
 
-  void Update();
+  void Update(std::vector<std::vector<GridState>> grid);
 
   void GrowBody();
-  bool SnakeCell(int x, int y);
 
   Direction direction = Direction::kUp;
 
@@ -27,6 +28,8 @@ class Snake {
   float head_x;
   float head_y;
   std::vector<SDL_Point> body;
+
+  std::vector<std::vector<GridState>> snakeGrid {};
 
  private:
   void UpdateHead();
