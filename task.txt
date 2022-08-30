@@ -12,4 +12,13 @@ Feature 3 (needs to be done after Feature 2 as the obstacles must be available)
 	- player can choose between play against computer and play alone
 	- add another snake which is controlled by A*search algortihm
 	
+	- open 2 windows: 
+		- one snake controlled by computer
+		- one snake controlled by player
+	- same food and obstacles for both windows
+		- in case one eats the food: change food location for other one
+		- in case one dies: other one won the game
+	- add both to score table but enter a pre-defined name for computer
+	
+	
 

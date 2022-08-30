@@ -53,16 +53,20 @@ void Snake::UpdateBody(SDL_Point &current_head_cell, SDL_Point &prev_head_cell) 
   // Add previous head location to vector
   body.push_back(prev_head_cell);
 
-  snakeGrid[static_cast<int>(prev_head_cell.x)][static_cast<int>(prev_head_cell.y)] = GridState::kSnake;
-
   if (!growing) {
     // Remove the tail from the vector.
     body.erase(body.begin());
-    snakeGrid[static_cast<int>(body.begin()->x)][static_cast<int>(body.begin()->y)] = GridState::kEmpty;
+    // Remove the tail from the snakeGrid
+    auto tailX = body.begin()->x;
+    auto tailY = body.begin()->y;
+    snakeGrid[tailX][tailY] = GridState::kEmpty;
   } else {
     growing = false;
     size++;
   }
+  // Add previous head location to the snakeGrid
+  snakeGrid[prev_head_cell.x][prev_head_cell.y] = GridState::kSnake;
+
   // Check if the snake has died.
   for (auto const &item : body) {
     if (current_head_cell.x == item.x && current_head_cell.y == item.y) {

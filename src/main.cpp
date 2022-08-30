@@ -16,9 +16,14 @@ int main() {
   Game game(kGridWidth, kGridHeight);
   game.Run(controller, renderer, kMsPerFrame);
   std::cout << "Game has terminated successfully!\n";
-  std::cout << "Score: " << game.GetScore() << "\n";
+  // computer score
+  std::cout << "A*Search Algo Score: " << game.GetAStarSearchScore() << "\n";
+  game.SaveScore("A*Search", game.GetAStarSearchScore());
+  // player score
+  std::cout << "Player Score: " << game.GetScore() << "\n";
   std::cout << "Size: " << game.GetSize() << "\n";
-  game.SaveScore();
+  game.SaveScore(game.GetUserName(), game.GetScore());
+
 
   return 0;
 }

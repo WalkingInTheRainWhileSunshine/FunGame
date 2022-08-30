@@ -6,20 +6,24 @@
 
 Game::Game(std::size_t grid_width, std::size_t grid_height)
     : snake(grid_width, grid_height),
+      astarSnake(grid_width, grid_height),
       engine(dev()),
       random_w(0, static_cast<int>(grid_width - 1)),
       random_h(0, static_cast<int>(grid_height - 1)) {
-
-
   InitializeGrid(grid_width, grid_height);
+  snake.snakeGrid = grid;
+  astarSnake.snakeGrid = grid;
   PlaceFood();
+  // ensure first path search (goal != food)
+  SearchAlgo.goal[0] = static_cast<int>(food.x) + 1;
+  SearchAlgo.goal[1] = static_cast<int>(food.y) + 1;
   PlaceObstacle();
 }
 
 void Game::InitializeGrid(std::size_t grid_width, std::size_t grid_height){
-  std::vector<Snake::GridState> yVector(grid_height);
-  std::fill(yVector.begin(), yVector.end(), Snake::GridState::kEmpty);
-  std::vector<std::vector<Snake::GridState>> initGrid (grid_width, yVector);
+  std::vector<GridState> yVector(grid_height);
+  std::fill(yVector.begin(), yVector.end(), GridState::kEmpty);
+  std::vector<std::vector<GridState>> initGrid (grid_width, yVector);
   grid = initGrid;
 }
 
@@ -35,10 +39,14 @@ void Game::Run(Controller const &controller, Renderer &renderer,
   while (running) {
     frame_start = SDL_GetTicks();
 
+    // Todo: Thread 1 calculates player input and update
+    // Todo: Thread 2 calculation Astar algo
     // Input, Update, Render - the main game loop.
     controller.HandleInput(running, snake);
     Update();
-    renderer.Render(snake, food, obstacle);
+
+    // Todo: add second snake to visualization
+    renderer.Render(snake, astarSnake, food, obstacle);
 
     frame_end = SDL_GetTicks();
 
@@ -49,7 +57,7 @@ void Game::Run(Controller const &controller, Renderer &renderer,
 
     // After every second, update the window title.
     if (frame_end - title_timestamp >= 1000) {
-      renderer.UpdateWindowTitle(score, frame_count);
+      renderer.UpdateWindowTitle(playerScore, frame_count);
       frame_count = 0;
       title_timestamp = frame_end;
     }
@@ -67,7 +75,7 @@ void Game::PlaceFood() {
   int x, y;
 
   // update grid
-  grid[food.x][food.y] = Snake::GridState::kEmpty;
+  grid[food.x][food.y] = GridState::kEmpty;
 
   while (true) {
     x = random_w(engine);
@@ -79,7 +87,7 @@ void Game::PlaceFood() {
       food.y = y;
 
       // update grid
-      grid[food.x][food.y] = Snake::GridState::kFood;
+      grid[food.x][food.y] = GridState::kFood;
       return;
     }
   }
@@ -99,7 +107,7 @@ void Game::PlaceObstacle() {
       obstacle.push_back(newObstacle);
 
       // update grid
-      grid[newObstacle.x][newObstacle.y] = Snake::GridState::kObstacle;
+      grid[newObstacle.x][newObstacle.y] = GridState::kObstacle;
       return;
     }
   }
@@ -107,44 +115,136 @@ void Game::PlaceObstacle() {
 
 bool Game::CheckCell(int x, int y) {
 
-  return grid[x][y] == Snake::GridState::kEmpty;
+  return (snake.snakeGrid[x][y] == GridState::kEmpty) && (astarSnake.snakeGrid[x][y] == GridState::kEmpty);
 }
 
 void Game::Update() {
-  if (!snake.alive) {
-    running = false;
-    return;
-  }
-
-  snake.Update(grid);
-  // Check for collision with obstacles
-  if (grid[snake.head_x][snake.head_y] == Snake::GridState::kObstacle) {
-    snake.alive = false;
-    running = false;
-    return;
-  }
+  UpdatePlayerSnake();
   // update grid by current snake position
-  grid = snake.snakeGrid;
+  //grid = snake.snakeGrid;
+  UpdateAstarSearchSnake();
+  // update grid by current snake position
+  //grid = astarSnake.snakeGrid;
 
-  int new_x = static_cast<int>(snake.head_x);
-  int new_y = static_cast<int>(snake.head_y);
 
-  // Check if there's food over here
-  if (food.x == new_x && food.y == new_y) {
-    score++;
-    PlaceFood();
+  // snake: Check if there's food over here
+  bool playerSnakeAte {false}, astarSearchSnakeAte {false};
+  if (food.x == static_cast<int>(snake.head_x) && food.y == static_cast<int>(snake.head_y)) {
+    playerSnakeAte = true;
+
+    playerScore++;
     // Grow snake and increase speed.
     snake.GrowBody();
     snake.speed += 0.02;
+    astarSnake.speed += 0.02;
+  }
+  // astarSnake: Check if there's food over here
+  if (food.x == static_cast<int>(astarSnake.head_x) && food.y == static_cast<int>(astarSnake.head_y)) {
+    playerSnakeAte = true;
+
+    computerScore++;
+    // Grow snake and increase speed.
+    astarSnake.GrowBody();
+    astarSnake.speed += 0.02;
+    snake.speed += 0.02;
+  }
+
+  if (playerSnakeAte || astarSearchSnakeAte) {
+    PlaceFood();
     // Place an obstacle each 5th cycle of new food
     addObstacle += 1;
     if (addObstacle%5 == 0)
       PlaceObstacle();
   }
-
 }
 
-int Game::GetScore() const { return score; }
+void Game::UpdateAstarSearchSnake(){
+  if (!snake.alive || !astarSnake.alive){
+    running = false;
+    return;
+  }
+
+  // search path
+  int start[2];
+  start[0] = static_cast<int>(astarSnake.head_x);
+  start[1] = static_cast<int>(astarSnake.head_y);
+  SearchAlgo.goal[0] = static_cast<int>(food.x);
+  SearchAlgo.goal[1] = static_cast<int>(food.y);
+
+  auto astarSnakePathGrid = grid;
+  astarSnakePathGrid[SearchAlgo.goal[0]][SearchAlgo.goal[1]] = GridState::kEmpty;
+  astarSnakePathGrid = SearchAlgo.Search(astarSnakePathGrid, start);
+  for (int i = 0; i < astarSnakePathGrid.size(); i++) {
+    for (int j = 0; j < astarSnakePathGrid[i].size(); j++) {
+      std::cout << CellString(astarSnakePathGrid[i][j]);
+    }
+    cout << "\n";
+  }
+  cout << "\n \n \n";
+
+  // set input directions according to search path
+  for (int i = 0; i < 4; i++) {
+    auto maxX = grid.size();
+    auto maxY = grid[0].size();
+
+    int x2 = fmod(start[0] + SearchAlgo.delta[i][0] + maxX, maxX);
+    int y2 = fmod(start[1] + SearchAlgo.delta[i][1] + maxY, maxY);
+
+
+    if (astarSnakePathGrid[x2][y2] == GridState::kPath){
+      switch (i) {
+        case 0: {
+          //if (astarSnake.direction == Snake::Direction::kRight) continue;
+          astarSnake.direction = Snake::Direction::kLeft;
+          break;
+        }
+        case 1: {
+          //if (astarSnake.direction == Snake::Direction::kDown) continue;
+          astarSnake.direction = Snake::Direction::kUp;
+          break;
+        }
+        case 2: {
+          //if (astarSnake.direction == Snake::Direction::kLeft) continue;
+          astarSnake.direction = Snake::Direction::kRight;
+          break;
+        }
+        case 3: {
+          //if (astarSnake.direction == Snake::Direction::kUp) continue;
+          astarSnake.direction = Snake::Direction::kDown;
+          break;
+        }
+      }
+    }
+  }
+
+  astarSnake.Update(grid);
+  grid = astarSnake.snakeGrid;
+  // Check for collision with obstacles
+  if (grid[astarSnake.head_x][astarSnake.head_y] == GridState::kObstacle) {
+    astarSnake.alive = false;
+    running = false;
+    return;
+  }
+}
+
+void Game::UpdatePlayerSnake(){
+  // check for collision of snake head with its body
+  if (!snake.alive || !astarSnake.alive) {
+    running = false;
+    return;
+  }
+  // update snake according to current user inputs
+  snake.Update(grid);
+  // Check for collision with obstacles
+  if (grid[snake.head_x][snake.head_y] == GridState::kObstacle) {
+    snake.alive = false;
+    running = false;
+    return;
+  }
+}
+
+int Game::GetAStarSearchScore() const { return computerScore; }
+int Game::GetScore() const { return playerScore; }
 int Game::GetSize() const { return snake.size; }
 std::string Game::GetUserName() {
     std::cout << "Please enter your name \n";
@@ -153,10 +253,7 @@ std::string Game::GetUserName() {
     return name;
 }
 
-void Game::SaveScore() const {
-    // get name and score
-    auto name = GetUserName();
-    auto userScore = GetScore();
+void Game::SaveScore(std::string name, int userScore) const {
 
     // write new score file
     std::ofstream scoreFile;
@@ -185,15 +282,15 @@ void Game::SaveScore() const {
         }
         auto totalPlayers = allScores.size() + 1; // including current player
         sort(allScores.begin(), allScores.end());
-        if (allScores.back() < score){
+        if (allScores.back() < userScore){
             std::cout << "You are currently No. 1 of " << totalPlayers << std::endl;
         }
         else {
-            auto it = std::upper_bound(allScores.begin(), allScores.end(), score);
+            auto it = std::upper_bound(allScores.begin(), allScores.end(), userScore);
             auto rank = std::distance( it, allScores.end()) + 1;
             std::cout << "You are currently No. " << rank << " out of " << totalPlayers
                       << std::endl;
-            std::cout << "Highest score is " << allScores.back() << std::endl;
+            std::cout << "Highest score is " << allScores.back() << std::endl << std::endl;
         }
     }
     oldScoreFile.close();

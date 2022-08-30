@@ -3,11 +3,11 @@
 
 #include <vector>
 #include "SDL.h"
+#include "gridstate.h"
 //#include "game.h"
 
 class Snake {
  public:
-  enum class GridState {kEmpty, kObstacle, kSnake, kFood};
   enum class Direction { kUp, kDown, kLeft, kRight };
 
   Snake(int grid_width, int grid_height)
