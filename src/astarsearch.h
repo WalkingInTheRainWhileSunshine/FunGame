@@ -21,7 +21,7 @@ using std::abs;
 class Astarsearch {
 public:
   /**
-   * Implementation of A* search algorithm
+   * Implementation of A* search algorithm from udacity route planning lesson
    */
 
   vector<vector<GridState>> Search(vector<vector<GridState>> grid, int init[2]);
@@ -61,29 +61,6 @@ private:
    */
   void ExpandNeighbors(const vector<int> &current, int goal[2], vector<vector<int>> &openlist,
                        vector<vector<GridState>> &grid);
-
-  class Node {
-  public:
-      Node * parent = nullptr;
-      double x = 0.f;
-      double y = 0.f;
-      float h = std::numeric_limits<float>::max();
-      float g = 0.0;
-      bool visited = false;
-      std::vector<Node *> neighbors;
-
-      //void FindNeighbors();
-      /*float distance(Node other) const {
-        return std::sqrt(std::pow((x - other.x), 2) + std::pow((y - other.y), 2));
-      }*/
-
-      Node(){}
-
-  private:
-      int index;
-      //Node * FindNeighbor(std::vector<int> node_indices);
-  };
-
 
 };
 

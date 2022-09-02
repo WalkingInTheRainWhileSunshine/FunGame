@@ -1,4 +1,4 @@
-#include "astarsearch.h"
+#include "astarsearch_1.h"
 
 bool Astarsearch::Compare(const vector<int> a, const vector<int> b) {
   int f1 = a[2] + a[3]; // f1 = g1 + h1
@@ -54,9 +54,6 @@ vector<vector<GridState>> Astarsearch::Search(vector<vector<GridState>> grid, in
   vector<vector<int>> open {};
 
   // Initialize the starting node.
-  /*Node startNode;
-  startNode.parent = nullptr;
-  startNode.x =*/
   int x = init[0];
   int y = init[1];
   int g = 0;
