@@ -135,8 +135,8 @@ void Game::Update() {
     playerScore++;
     // Grow snake and increase speed.
     snake.GrowBody();
-    snake.speed += 0.02;
-    astarSnake.speed += 0.02;
+    snake.speed += 0.01;
+    astarSnake.speed += 0.01;
   }
   // astarSnake: Check if there's food over here
   if (food.x == static_cast<int>(astarSnake.head_x) && food.y == static_cast<int>(astarSnake.head_y)) {
@@ -145,9 +145,12 @@ void Game::Update() {
     computerScore++;
     // Grow snake and increase speed.
     astarSnake.GrowBody();
-    astarSnake.speed += 0.02;
-    snake.speed += 0.02;
+    astarSnake.speed += 0.01;
+    snake.speed += 0.01;
   }
+
+  std::min(snake.speed, maxSpeed);
+  std::min(astarSnake.speed, maxSpeed);
 
   if (playerSnakeAte || astarSearchSnakeAte) {
     PlaceFood();
@@ -187,11 +190,11 @@ void Game::UpdateAstarSearchSnake(){
     auto maxX = grid.size();
     auto maxY = grid[0].size();
 
-    int x2 = fmod(start[0] + SearchAlgo.delta[i][0] + maxX, maxX);
-    int y2 = fmod(start[1] + SearchAlgo.delta[i][1] + maxY, maxY);
+    int x2 = start[0] + SearchAlgo.delta[i][0];
+    int y2 = start[1] + SearchAlgo.delta[i][1];
 
 
-    if (astarSnakePathGrid[x2][y2] == GridState::kPath){
+    if (x2 < maxX && y2 < maxY && (astarSnakePathGrid[x2][y2] == GridState::kPath || astarSnakePathGrid[x2][y2] == GridState::kFinish)){
       switch (i) {
         case 0: {
           //if (astarSnake.direction == Snake::Direction::kRight) continue;

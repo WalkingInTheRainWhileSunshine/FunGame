@@ -4,7 +4,6 @@
 #include <vector>
 #include "SDL.h"
 #include "gridstate.h"
-//#include "game.h"
 
 class Snake {
  public:

@@ -36,6 +36,7 @@ class Game {
   int playerScore {0};
   int computerScore {0};
   int addObstacle {0};
+  const float maxSpeed = 3.0;
 
   void InitializeGrid(std::size_t grid_width, std::size_t grid_height);
   void PlaceFood();
