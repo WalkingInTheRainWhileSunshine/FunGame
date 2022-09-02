@@ -6,6 +6,13 @@ This is repo for the Capstone project in the [Udacity C++ Nanodegree Program](ht
 
 This Snake Game allows you to play against the computer. The computer uses a simple a* algorithm to find the way to food. If either player's or computer's snake eat the food, the velocity of both is increased. Of course the score gets who eats the food only.
 
+Feature 1: Scores tracking
+	Scores will be written into build/snakeScores.txt
+Feature 2: Add a new obstacle after each 5th piece of food is eaten
+Feature 3: Add a computer controlled snake based on A* search algorithm
+	additionally save the computer scores by name "A*Search"
+
+
 ## Dependencies for Running Locally
 * cmake >= 3.7
   * All OSes: [click here for installation instructions](https://cmake.org/install/)

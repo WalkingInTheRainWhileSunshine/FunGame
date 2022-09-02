@@ -39,13 +39,10 @@ void Game::Run(Controller const &controller, Renderer &renderer,
   while (running) {
     frame_start = SDL_GetTicks();
 
-    // Todo: Thread 1 calculates player input and update
-    // Todo: Thread 2 calculation Astar algo
     // Input, Update, Render - the main game loop.
     controller.HandleInput(running, snake);
     Update();
 
-    // Todo: add second snake to visualization
     renderer.Render(snake, astarSnake, food, obstacle);
 
     frame_end = SDL_GetTicks();
@@ -177,6 +174,8 @@ void Game::UpdateAstarSearchSnake(){
   auto astarSnakePathGrid = grid;
   astarSnakePathGrid[SearchAlgo.goal[0]][SearchAlgo.goal[1]] = GridState::kEmpty;
   astarSnakePathGrid = SearchAlgo.Search(astarSnakePathGrid, start);
+  /* 
+  // debug output
   for (int i = 0; i < astarSnakePathGrid.size(); i++) {
     for (int j = 0; j < astarSnakePathGrid[i].size(); j++) {
       std::cout << CellString(astarSnakePathGrid[i][j]);
@@ -184,6 +183,7 @@ void Game::UpdateAstarSearchSnake(){
     cout << "\n";
   }
   cout << "\n \n \n";
+  */
 
   // set input directions according to search path
   for (int i = 0; i < 4; i++) {
